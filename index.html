@@ -362,6 +362,8 @@
       background: var(--bg-subtle);
     }
 
+    .empty.is-error { color: #9b1c1c; }
+
     /* ——— Partner CTA ——— */
     .partner {
       background: var(--bg-subtle);
@@ -448,20 +450,10 @@
   </footer>
 
   <script>
-    // ---------------------------------------------------------------------------
-    // Sample gym data — add objects here to grow the directory.
-    // Optional fields: price (number, EUR per day), url, year, featured, dagpas
-    // ---------------------------------------------------------------------------
-    const gyms = [
-      { name: 'Megafit', city: 'Hoogstraten', country: 'België', type: 'Fitness', price: null, year: 390, description: 'Fitness met gevarieerde apparatuur.', tags: ['24/7', 'Cardio', 'Dumbells'], url: 'https://www.megafit.be', featured: true, dagpas: false },
-      { name: 'Jims Hoogstraten', city: 'Hoogstraten', country: 'België', type: 'Fitness', price: null, year: null, description: '', tags: ['Fitness'], url: '', featured: false, dagpas: false },
-      { name: 'Fun2move', city: 'Hoogstraten', country: 'België', type: 'Fitness', price: null, year: null, description: '', tags: ['Fitness'], url: '', featured: false, dagpas: false },
-      { name: 'Body Fit Turnhout', city: 'Turnhout', country: 'België', type: 'Fitness', price: null, year: null, description: '', tags: ['Fitness'], url: '', featured: false, dagpas: false },
-      { name: 'Distrikt 7', city: 'Oud-Turnhout', country: 'België', type: 'Fitness', price: null, year: null, description: '', tags: ['Fitness'], url: '', featured: false, dagpas: false }
-    ];
+    const GYMS_ENDPOINT = '/.netlify/functions/getGyms';
 
-    // Keep original order so "Meest relevant" can restore it (featured first).
-    gyms.forEach((gym, index) => { gym._index = index; });
+    let gyms = [];
+    let loadError = '';
 
     const FILTERS = [
       { id: 'all', label: 'Alle gyms' },
@@ -501,6 +493,50 @@
         return 'Prijs op aanvraag';
       }
       return '€' + price + ' / dag';
+    }
+
+    function parsePrice(value) {
+      if (value === null || value === undefined || value === '') return null;
+      if (typeof value === 'number' && !Number.isNaN(value)) return value;
+      const match = String(value).replace(',', '.').match(/-?\d+(\.\d+)?/);
+      return match ? Number(match[0]) : null;
+    }
+
+    function normalizeTags(value) {
+      if (!value) return [];
+      if (Array.isArray(value)) {
+        return value.map(function (tag) { return String(tag).trim(); }).filter(Boolean);
+      }
+      return String(value).split(',').map(function (tag) { return tag.trim(); }).filter(Boolean);
+    }
+
+    function field(fields, ...names) {
+      for (var i = 0; i < names.length; i++) {
+        if (fields[names[i]] !== undefined && fields[names[i]] !== null) {
+          return fields[names[i]];
+        }
+      }
+      return '';
+    }
+
+    // Airtable: Name, Stad, Land, Type, Beschrijving, Prijs dagpas,
+    // Tags, Website URL, Featured, Dagpas beschikbaar
+    function mapGym(record, index) {
+      const fields = record && record.fields ? record.fields : (record || {});
+      return {
+        id: record && record.id ? record.id : String(index),
+        name: String(field(fields, 'Name', 'name')),
+        city: String(field(fields, 'Stad', 'city')),
+        country: String(field(fields, 'Land', 'country')),
+        type: String(field(fields, 'Type', 'type')),
+        description: String(field(fields, 'Beschrijving', 'description')),
+        price: parsePrice(field(fields, 'Prijs dagpas', 'price')),
+        tags: normalizeTags(field(fields, 'Tags', 'tags')),
+        url: String(field(fields, 'Website URL', 'url')),
+        featured: Boolean(field(fields, 'Featured', 'featured')),
+        dagpas: Boolean(field(fields, 'Dagpas beschikbaar', 'dagpas')),
+        _index: index
+      };
     }
 
     // Tag pills match the filter label (case-insensitive).
@@ -578,6 +614,12 @@
     }
 
     function renderCards() {
+      if (loadError) {
+        els.count.textContent = '';
+        els.list.innerHTML = '<p class="empty is-error">' + escapeHtml(loadError) + '</p>';
+        return;
+      }
+
       const items = visibleGyms();
       const n = items.length;
       els.count.textContent = n === 1 ? '1 resultaat' : n + ' resultaten';
@@ -657,7 +699,31 @@
       render();
     });
 
-    render();
+    async function loadGyms() {
+      els.count.textContent = '';
+      els.list.innerHTML = '<p class="empty">Gyms laden…</p>';
+      renderFilters();
+
+      try {
+        const response = await fetch(GYMS_ENDPOINT);
+        const data = await response.json().catch(function () { return {}; });
+
+        if (!response.ok) {
+          throw new Error(data.error || 'Gyms konden niet geladen worden');
+        }
+
+        const records = Array.isArray(data.records) ? data.records : [];
+        gyms = records.map(mapGym);
+        loadError = '';
+      } catch (err) {
+        gyms = [];
+        loadError = 'Gyms konden niet geladen worden. Probeer het later opnieuw.';
+      }
+
+      render();
+    }
+
+    loadGyms();
   </script>
 </body>
 </html>
