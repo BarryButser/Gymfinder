@@ -1,0 +1,663 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="description" content="Gymfinder helpt je gyms, yogastudio's, outdoor locaties en kinesisten te vinden in België en Nederland." />
+  <title>Gymfinder — Vind de juiste gym</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --navy: #1B3A6B;
+      --accent: #2A5298;
+      --navy-soft: rgba(27, 58, 107, 0.08);
+      --text: #1a1a1a;
+      --muted: #6b7280;
+      --border: #e5e7eb;
+      --bg: #ffffff;
+      --bg-subtle: #f7f8fa;
+      --shadow: 0 8px 24px rgba(27, 58, 107, 0.08);
+      --radius: 16px;
+      --max: 880px;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    html { scroll-behavior: smooth; }
+
+    body {
+      font-family: Inter, system-ui, -apple-system, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.5;
+      min-height: 100vh;
+    }
+
+    a { color: inherit; }
+
+    /* ——— Layout ——— */
+    .wrap {
+      width: min(var(--max), calc(100% - 40px));
+      margin-inline: auto;
+    }
+
+    /* ——— Nav ——— */
+    .nav {
+      position: sticky;
+      top: 0;
+      z-index: 20;
+      background: rgba(255, 255, 255, 0.92);
+      backdrop-filter: blur(12px);
+      border-bottom: 1px solid var(--border);
+    }
+
+    .nav-inner {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      height: 68px;
+    }
+
+    .logo {
+      font-weight: 800;
+      font-size: 1.25rem;
+      letter-spacing: -0.03em;
+      color: var(--navy);
+      text-decoration: none;
+    }
+
+    .btn-outline {
+      display: inline-flex;
+      align-items: center;
+      padding: 8px 16px;
+      border: 1.5px solid var(--navy);
+      border-radius: 999px;
+      color: var(--navy);
+      background: transparent;
+      font: inherit;
+      font-weight: 600;
+      font-size: 0.9rem;
+      text-decoration: none;
+      cursor: pointer;
+      transition: background 0.15s ease, color 0.15s ease;
+    }
+
+    .btn-outline:hover {
+      background: var(--navy);
+      color: #fff;
+    }
+
+    /* ——— Hero ——— */
+    .hero {
+      padding: 72px 0 28px;
+      text-align: center;
+    }
+
+    .hero h1 {
+      font-size: clamp(1.85rem, 4.4vw, 2.75rem);
+      font-weight: 800;
+      letter-spacing: -0.04em;
+      line-height: 1.15;
+      color: var(--navy);
+      max-width: 16ch;
+      margin: 0 auto 12px;
+    }
+
+    .hero .subtitle {
+      color: var(--muted);
+      font-size: 1.05rem;
+      margin-bottom: 32px;
+    }
+
+    .search {
+      display: flex;
+      gap: 10px;
+      max-width: 640px;
+      margin: 0 auto;
+      background: #fff;
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 8px;
+      box-shadow: var(--shadow);
+    }
+
+    .search input {
+      flex: 1;
+      border: 0;
+      outline: none;
+      font: inherit;
+      font-size: 1rem;
+      padding: 10px 12px;
+      min-width: 0;
+      background: transparent;
+    }
+
+    .search input::placeholder { color: #9ca3af; }
+
+    .btn-navy {
+      background: var(--navy);
+      color: #fff;
+      border: 0;
+      border-radius: 10px;
+      padding: 12px 22px;
+      font: inherit;
+      font-weight: 600;
+      cursor: pointer;
+      white-space: nowrap;
+      transition: background 0.15s ease;
+    }
+
+    .btn-navy:hover { background: var(--accent); }
+
+    /* ——— Filters ——— */
+    .filters {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 8px;
+      padding: 22px 0 8px;
+    }
+
+    .pill {
+      border: 1px solid var(--border);
+      background: #fff;
+      color: var(--text);
+      border-radius: 999px;
+      padding: 8px 14px;
+      font: inherit;
+      font-size: 0.88rem;
+      font-weight: 500;
+      cursor: pointer;
+      transition: background 0.15s ease, color 0.15s ease, border-color 0.15s ease;
+    }
+
+    .pill:hover { border-color: var(--accent); color: var(--navy); }
+
+    .pill.is-active {
+      background: var(--navy);
+      border-color: var(--navy);
+      color: #fff;
+    }
+
+    /* ——— Results bar ——— */
+    .results {
+      padding: 40px 0 80px;
+    }
+
+    .results h2 {
+      font-size: 1.35rem;
+      letter-spacing: -0.03em;
+      margin-bottom: 16px;
+    }
+
+    .toolbar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      margin-bottom: 18px;
+      flex-wrap: wrap;
+    }
+
+    .count {
+      color: var(--muted);
+      font-size: 0.92rem;
+    }
+
+    .sort {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 0.9rem;
+      color: var(--muted);
+    }
+
+    .sort select {
+      font: inherit;
+      font-size: 0.9rem;
+      color: var(--navy);
+      font-weight: 600;
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 8px 12px;
+      background: #fff;
+      cursor: pointer;
+    }
+
+    /* ——— Cards ——— */
+    .list {
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+
+    .card {
+      position: relative;
+      width: 100%;
+      background: #fff;
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 24px 24px 20px;
+      box-shadow: var(--shadow);
+      transition: transform 0.15s ease, box-shadow 0.15s ease;
+    }
+
+    .card:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 12px 32px rgba(27, 58, 107, 0.12);
+    }
+
+    .card-top {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      gap: 16px;
+    }
+
+    .card h3 {
+      font-size: 1.28rem;
+      letter-spacing: -0.02em;
+      line-height: 1.25;
+      padding-right: 8px;
+    }
+
+    .meta {
+      color: var(--muted);
+      font-size: 0.9rem;
+      margin-top: 4px;
+    }
+
+    .price {
+      color: var(--navy);
+      font-weight: 700;
+      font-size: 0.98rem;
+      white-space: nowrap;
+    }
+
+    .type {
+      display: inline-block;
+      margin-top: 10px;
+      font-size: 0.75rem;
+      font-weight: 600;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+      color: var(--accent);
+      background: var(--navy-soft);
+      padding: 4px 8px;
+      border-radius: 6px;
+    }
+
+    .desc {
+      margin-top: 12px;
+      color: #374151;
+      font-size: 0.95rem;
+    }
+
+    .tags {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      margin-top: 14px;
+    }
+
+    .tag {
+      background: #f3f4f6;
+      color: #4b5563;
+      font-size: 0.78rem;
+      font-weight: 500;
+      padding: 4px 9px;
+      border-radius: 999px;
+    }
+
+    .badge {
+      position: absolute;
+      top: 14px;
+      left: 14px;
+      background: var(--navy);
+      color: #fff;
+      font-size: 0.7rem;
+      font-weight: 700;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+      padding: 4px 8px;
+      border-radius: 6px;
+    }
+
+    .card.is-featured { padding-top: 42px; }
+
+    .card-link {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      margin-top: 16px;
+      color: var(--navy);
+      font-weight: 600;
+      font-size: 0.92rem;
+      text-decoration: none;
+    }
+
+    .card-link::after {
+      content: "";
+      width: 7px;
+      height: 7px;
+      border-right: 2px solid currentColor;
+      border-top: 2px solid currentColor;
+      transform: rotate(45deg);
+    }
+
+    .card-link:hover { color: var(--accent); }
+    .card-link.is-disabled {
+      color: #9ca3af;
+      pointer-events: none;
+    }
+
+    .empty {
+      text-align: center;
+      color: var(--muted);
+      padding: 48px 16px;
+      border: 1px dashed var(--border);
+      border-radius: var(--radius);
+      background: var(--bg-subtle);
+    }
+
+    /* ——— Partner CTA ——— */
+    .partner {
+      background: var(--bg-subtle);
+      border-top: 1px solid var(--border);
+      padding: 56px 0;
+      text-align: center;
+    }
+
+    .partner h2 { color: var(--navy); margin-bottom: 8px; }
+    .partner p { color: var(--muted); margin-bottom: 18px; }
+
+    footer {
+      padding: 24px 0 36px;
+      text-align: center;
+      color: var(--muted);
+      font-size: 0.85rem;
+    }
+
+    @media (max-width: 560px) {
+      .hero { padding-top: 48px; }
+      .search { flex-direction: column; }
+      .btn-navy { width: 100%; }
+      .card-top { flex-direction: column; gap: 6px; }
+    }
+  </style>
+</head>
+<body>
+  <header class="nav">
+    <div class="wrap nav-inner">
+      <a class="logo" href="#">gymfinder</a>
+      <a class="btn-outline" href="#voor-gyms">Voor gyms</a>
+    </div>
+  </header>
+
+  <main>
+    <section class="hero">
+      <div class="wrap">
+        <h1>Vind de juiste gym, waar je ook bent</h1>
+        <p class="subtitle">Vergelijk gyms op prijs, sfeer en apparatuur</p>
+        <form class="search" id="search-form" role="search">
+          <input
+            id="search-input"
+            type="search"
+            placeholder="Zoek op stad, buurt of gymnaam"
+            autocomplete="off"
+            aria-label="Zoek op stad, buurt of gymnaam"
+          />
+          <button class="btn-navy" type="submit">Zoeken</button>
+        </form>
+        <div class="filters" id="filters" role="group" aria-label="Filters"></div>
+      </div>
+    </section>
+
+    <section class="results">
+      <div class="wrap">
+        <h2>Populaire gyms in de buurt</h2>
+        <div class="toolbar">
+          <p class="count" id="results-count"></p>
+          <label class="sort">
+            Sorteren
+            <select id="sort-select" aria-label="Sorteer resultaten">
+              <option value="relevant">Meest relevant</option>
+              <option value="price-asc">Prijs: laag naar hoog</option>
+              <option value="price-desc">Prijs: hoog naar laag</option>
+              <option value="nearby">Dichtstbij</option>
+            </select>
+          </label>
+        </div>
+        <div class="list" id="gym-list"></div>
+      </div>
+    </section>
+
+    <section class="partner" id="voor-gyms">
+      <div class="wrap">
+        <h2>Zet jouw gym op Gymfinder</h2>
+        <p>Bereik sporters in België en Nederland. Vermelding is snel en overzichtelijk.</p>
+        <a class="btn-navy" href="mailto:hallo@gymfinder.be?subject=Gym%20aanmelden">Gym aanmelden</a>
+      </div>
+    </section>
+  </main>
+
+  <footer>
+    <div class="wrap">© 2026 Gymfinder · België &amp; Nederland</div>
+  </footer>
+
+  <script>
+    // ---------------------------------------------------------------------------
+    // Sample gym data — add objects here to grow the directory.
+    // Optional fields: price (number, EUR per day), url, year, featured, dagpas
+    // ---------------------------------------------------------------------------
+    const gyms = [
+      { name: 'Megafit', city: 'Hoogstraten', country: 'België', type: 'Fitness', price: null, year: 390, description: 'Fitness met gevarieerde apparatuur.', tags: ['24/7', 'Cardio', 'Dumbells'], url: 'https://www.megafit.be', featured: true, dagpas: false },
+      { name: 'Jims Hoogstraten', city: 'Hoogstraten', country: 'België', type: 'Fitness', price: null, year: null, description: '', tags: ['Fitness'], url: '', featured: false, dagpas: false },
+      { name: 'Fun2move', city: 'Hoogstraten', country: 'België', type: 'Fitness', price: null, year: null, description: '', tags: ['Fitness'], url: '', featured: false, dagpas: false },
+      { name: 'Body Fit Turnhout', city: 'Turnhout', country: 'België', type: 'Fitness', price: null, year: null, description: '', tags: ['Fitness'], url: '', featured: false, dagpas: false },
+      { name: 'Distrikt 7', city: 'Oud-Turnhout', country: 'België', type: 'Fitness', price: null, year: null, description: '', tags: ['Fitness'], url: '', featured: false, dagpas: false }
+    ];
+
+    // Keep original order so "Meest relevant" can restore it (featured first).
+    gyms.forEach((gym, index) => { gym._index = index; });
+
+    const FILTERS = [
+      { id: 'all', label: 'Alle gyms' },
+      { id: 'dagpas', label: 'Dagpas beschikbaar' },
+      { id: 'Powerlifting', label: 'Powerlifting' },
+      { id: 'Yoga', label: 'Yoga' },
+      { id: 'Outdoor', label: 'Outdoor' },
+      { id: 'Budget', label: 'Budget' },
+      { id: 'Premium', label: 'Premium' }
+    ];
+
+    const state = {
+      query: '',
+      filter: 'all',
+      sort: 'relevant'
+    };
+
+    const els = {
+      filters: document.getElementById('filters'),
+      list: document.getElementById('gym-list'),
+      count: document.getElementById('results-count'),
+      form: document.getElementById('search-form'),
+      input: document.getElementById('search-input'),
+      sort: document.getElementById('sort-select')
+    };
+
+    function escapeHtml(value) {
+      return String(value)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;');
+    }
+
+    function formatPrice(price) {
+      if (price === null || price === undefined || price === '') {
+        return 'Prijs op aanvraag';
+      }
+      return '€' + price + ' / dag';
+    }
+
+    // Tag pills match the filter label (case-insensitive).
+    function hasTag(gym, value) {
+      const needle = value.toLowerCase();
+      return (gym.tags || []).some((tag) => String(tag).toLowerCase() === needle);
+    }
+
+    function matchesFilter(gym) {
+      if (state.filter === 'all') return true;
+      if (state.filter === 'dagpas') return gym.dagpas === true;
+      return hasTag(gym, state.filter);
+    }
+
+    function matchesQuery(gym) {
+      const q = state.query.trim().toLowerCase();
+      if (!q) return true;
+      const haystack = [
+        gym.name,
+        gym.city,
+        gym.country,
+        gym.type,
+        gym.description,
+        ...(gym.tags || [])
+      ].join(' ').toLowerCase();
+      return haystack.includes(q);
+    }
+
+    function sortGyms(list) {
+      const items = list.slice();
+      if (state.sort === 'price-asc') {
+        items.sort((a, b) => {
+          const ap = a.price == null;
+          const bp = b.price == null;
+          if (ap && bp) return a._index - b._index;
+          if (ap) return 1;
+          if (bp) return -1;
+          return a.price - b.price;
+        });
+      } else if (state.sort === 'price-desc') {
+        items.sort((a, b) => {
+          const ap = a.price == null;
+          const bp = b.price == null;
+          if (ap && bp) return a._index - b._index;
+          if (ap) return 1;
+          if (bp) return -1;
+          return b.price - a.price;
+        });
+      } else if (state.sort === 'nearby') {
+        // No coordinates yet: alphabetical by city, then name.
+        items.sort((a, b) => {
+          const city = a.city.localeCompare(b.city, 'nl');
+          return city !== 0 ? city : a.name.localeCompare(b.name, 'nl');
+        });
+      } else {
+        // Meest relevant: featured first, then original data order.
+        items.sort((a, b) => {
+          if (a.featured !== b.featured) return a.featured ? -1 : 1;
+          return a._index - b._index;
+        });
+      }
+      return items;
+    }
+
+    function visibleGyms() {
+      return sortGyms(gyms.filter((gym) => matchesFilter(gym) && matchesQuery(gym)));
+    }
+
+    function renderFilters() {
+      els.filters.innerHTML = FILTERS.map((filter) => {
+        const active = state.filter === filter.id ? ' is-active' : '';
+        return '<button type="button" class="pill' + active + '" data-filter="' +
+          escapeHtml(filter.id) + '">' + escapeHtml(filter.label) + '</button>';
+      }).join('');
+    }
+
+    function renderCards() {
+      const items = visibleGyms();
+      const n = items.length;
+      els.count.textContent = n === 1 ? '1 resultaat' : n + ' resultaten';
+
+      if (!n) {
+        els.list.innerHTML = '<p class="empty">Geen gyms gevonden. Probeer een andere zoekterm of filter.</p>';
+        return;
+      }
+
+      els.list.innerHTML = items.map((gym) => {
+        const featured = gym.featured ? ' is-featured' : '';
+        const badge = gym.featured ? '<span class="badge">Uitgelicht</span>' : '';
+        const desc = gym.description
+          ? '<p class="desc">' + escapeHtml(gym.description) + '</p>'
+          : '';
+        const tags = (gym.tags || []).map((tag) =>
+          '<span class="tag">' + escapeHtml(tag) + '</span>'
+        ).join('');
+        const hasUrl = Boolean(gym.url);
+        const link = hasUrl
+          ? '<a class="card-link" href="' + escapeHtml(gym.url) + '" target="_blank" rel="noopener noreferrer">Bekijk gym</a>'
+          : '<span class="card-link is-disabled">Bekijk gym</span>';
+
+        return (
+          '<article class="card' + featured + '">' +
+            badge +
+            '<div class="card-top">' +
+              '<div>' +
+                '<h3>' + escapeHtml(gym.name) + '</h3>' +
+                '<p class="meta">' + escapeHtml(gym.city) + ', ' + escapeHtml(gym.country) + '</p>' +
+                '<span class="type">' + escapeHtml(gym.type) + '</span>' +
+              '</div>' +
+              '<div class="price">' + escapeHtml(formatPrice(gym.price)) + '</div>' +
+            '</div>' +
+            desc +
+            '<div class="tags">' + tags + '</div>' +
+            link +
+          '</article>'
+        );
+      }).join('');
+    }
+
+    function render() {
+      renderFilters();
+      renderCards();
+    }
+
+    els.filters.addEventListener('click', (event) => {
+      const button = event.target.closest('[data-filter]');
+      if (!button) return;
+      const id = button.getAttribute('data-filter');
+
+      // Alle gyms always resets. Clicking the active pill deactivates it.
+      if (id === 'all') {
+        state.filter = 'all';
+      } else if (state.filter === id) {
+        state.filter = 'all';
+      } else {
+        state.filter = id;
+      }
+      render();
+    });
+
+    els.form.addEventListener('submit', (event) => {
+      event.preventDefault();
+      state.query = els.input.value;
+      render();
+    });
+
+    els.input.addEventListener('input', () => {
+      state.query = els.input.value;
+      render();
+    });
+
+    els.sort.addEventListener('change', () => {
+      state.sort = els.sort.value;
+      render();
+    });
+
+    render();
+  </script>
+</body>
+</html>
