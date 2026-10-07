@@ -397,7 +397,26 @@
       if (!mapInitialized) return;
       clusterGroup.clearLayers();
       mapMarkers = [];
-      const items = visibleGyms().filter(g => g.adres);
+
+      /* Debug: als er geen Airtable data is, gebruik testpunten */
+      const allItems = visibleGyms();
+      const items = allItems.filter(g => g.adres && g.adres.trim() !== '' && g.adres !== 'undefined');
+
+      /* Als er geen items met adres zijn: toon testmarkers zodat kaart werkt */
+      if (items.length === 0) {
+        const testPoints = [
+          { lat: 51.4003, lng: 4.7747, name: 'Testgym Hoogstraten' },
+          { lat: 51.2213, lng: 4.3997, name: 'Testgym Antwerpen' },
+          { lat: 51.0543, lng: 3.7174, name: 'Testgym Gent' }
+        ];
+        testPoints.forEach(p => {
+          const icon = makePinIcon(false);
+          const marker = L.marker([p.lat, p.lng], { icon })
+            .bindPopup('<div class="gym-popup"><h4>' + p.name + '</h4><p class="p-meta">Testdata — voeg adressen toe in Airtable</p></div>');
+          clusterGroup.addLayer(marker);
+        });
+        return;
+      }
 
       /* Alle adressen parallel geocoden — gecachte meteen, rest met kleine vertraging */
       const results = await Promise.all(items.map(async (gym, i) => {
