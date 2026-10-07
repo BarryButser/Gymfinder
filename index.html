@@ -8,6 +8,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
   <style>
     :root {
       --navy: #1B3A6B;
@@ -24,369 +25,100 @@
     }
 
     * { box-sizing: border-box; margin: 0; padding: 0; }
-
     html { scroll-behavior: smooth; }
-
-    body {
-      font-family: Inter, system-ui, -apple-system, sans-serif;
-      background: var(--bg);
-      color: var(--text);
-      line-height: 1.5;
-      min-height: 100vh;
-    }
-
+    body { font-family: Inter, system-ui, -apple-system, sans-serif; background: var(--bg); color: var(--text); line-height: 1.5; min-height: 100vh; }
     a { color: inherit; }
 
-    /* ——— Layout ——— */
-    .wrap {
-      width: min(var(--max), calc(100% - 40px));
-      margin-inline: auto;
-    }
+    .wrap { width: min(var(--max), calc(100% - 40px)); margin-inline: auto; }
 
-    /* ——— Nav ——— */
-    .nav {
-      position: sticky;
-      top: 0;
-      z-index: 20;
-      background: rgba(255, 255, 255, 0.92);
-      backdrop-filter: blur(12px);
-      border-bottom: 1px solid var(--border);
-    }
+    /* Nav */
+    .nav { position: sticky; top: 0; z-index: 100; background: rgba(255,255,255,0.92); backdrop-filter: blur(12px); border-bottom: 1px solid var(--border); }
+    .nav-inner { display: flex; align-items: center; justify-content: space-between; height: 68px; }
+    .logo { font-weight: 800; font-size: 1.25rem; letter-spacing: -0.03em; color: var(--navy); text-decoration: none; }
+    .btn-outline { display: inline-flex; align-items: center; padding: 8px 16px; border: 1.5px solid var(--navy); border-radius: 999px; color: var(--navy); background: transparent; font: inherit; font-weight: 600; font-size: 0.9rem; text-decoration: none; cursor: pointer; transition: background 0.15s, color 0.15s; }
+    .btn-outline:hover { background: var(--navy); color: #fff; }
 
-    .nav-inner {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      height: 68px;
-    }
+    /* Hero */
+    .hero { padding: 72px 0 28px; text-align: center; }
+    .hero h1 { font-size: clamp(1.85rem, 4.4vw, 2.75rem); font-weight: 800; letter-spacing: -0.04em; line-height: 1.15; color: var(--navy); max-width: 16ch; margin: 0 auto 12px; }
+    .hero .subtitle { color: var(--muted); font-size: 1.05rem; margin-bottom: 32px; }
 
-    .logo {
-      font-weight: 800;
-      font-size: 1.25rem;
-      letter-spacing: -0.03em;
-      color: var(--navy);
-      text-decoration: none;
-    }
-
-    .btn-outline {
-      display: inline-flex;
-      align-items: center;
-      padding: 8px 16px;
-      border: 1.5px solid var(--navy);
-      border-radius: 999px;
-      color: var(--navy);
-      background: transparent;
-      font: inherit;
-      font-weight: 600;
-      font-size: 0.9rem;
-      text-decoration: none;
-      cursor: pointer;
-      transition: background 0.15s ease, color 0.15s ease;
-    }
-
-    .btn-outline:hover {
-      background: var(--navy);
-      color: #fff;
-    }
-
-    /* ——— Hero ——— */
-    .hero {
-      padding: 72px 0 28px;
-      text-align: center;
-    }
-
-    .hero h1 {
-      font-size: clamp(1.85rem, 4.4vw, 2.75rem);
-      font-weight: 800;
-      letter-spacing: -0.04em;
-      line-height: 1.15;
-      color: var(--navy);
-      max-width: 16ch;
-      margin: 0 auto 12px;
-    }
-
-    .hero .subtitle {
-      color: var(--muted);
-      font-size: 1.05rem;
-      margin-bottom: 32px;
-    }
-
-    .search {
-      display: flex;
-      gap: 10px;
-      max-width: 640px;
-      margin: 0 auto;
-      background: #fff;
-      border: 1px solid var(--border);
-      border-radius: 14px;
-      padding: 8px;
-      box-shadow: var(--shadow);
-    }
-
-    .search input {
-      flex: 1;
-      border: 0;
-      outline: none;
-      font: inherit;
-      font-size: 1rem;
-      padding: 10px 12px;
-      min-width: 0;
-      background: transparent;
-    }
-
+    .search { display: flex; gap: 10px; max-width: 640px; margin: 0 auto; background: #fff; border: 1px solid var(--border); border-radius: 14px; padding: 8px; box-shadow: var(--shadow); }
+    .search input { flex: 1; border: 0; outline: none; font: inherit; font-size: 1rem; padding: 10px 12px; min-width: 0; background: transparent; }
     .search input::placeholder { color: #9ca3af; }
 
-    .btn-navy {
-      background: var(--navy);
-      color: #fff;
-      border: 0;
-      border-radius: 10px;
-      padding: 12px 22px;
-      font: inherit;
-      font-weight: 600;
-      cursor: pointer;
-      white-space: nowrap;
-      transition: background 0.15s ease;
-    }
-
+    .btn-navy { background: var(--navy); color: #fff; border: 0; border-radius: 10px; padding: 12px 22px; font: inherit; font-weight: 600; cursor: pointer; white-space: nowrap; transition: background 0.15s; }
     .btn-navy:hover { background: var(--accent); }
 
-    /* ——— Filters ——— */
-    .filters {
-      display: flex;
-      flex-wrap: wrap;
-      justify-content: center;
-      gap: 8px;
-      padding: 22px 0 8px;
-    }
-
-    .pill {
-      border: 1px solid var(--border);
-      background: #fff;
-      color: var(--text);
-      border-radius: 999px;
-      padding: 8px 14px;
-      font: inherit;
-      font-size: 0.88rem;
-      font-weight: 500;
-      cursor: pointer;
-      transition: background 0.15s ease, color 0.15s ease, border-color 0.15s ease;
-    }
-
+    /* Filters */
+    .filters { display: flex; flex-wrap: wrap; justify-content: center; gap: 8px; padding: 22px 0 8px; }
+    .pill { border: 1px solid var(--border); background: #fff; color: var(--text); border-radius: 999px; padding: 8px 14px; font: inherit; font-size: 0.88rem; font-weight: 500; cursor: pointer; transition: background 0.15s, color 0.15s, border-color 0.15s; }
     .pill:hover { border-color: var(--accent); color: var(--navy); }
+    .pill.is-active { background: var(--navy); border-color: var(--navy); color: #fff; }
 
-    .pill.is-active {
-      background: var(--navy);
-      border-color: var(--navy);
-      color: #fff;
-    }
+    /* Results */
+    .results { padding: 40px 0 80px; }
+    .results h2 { font-size: 1.35rem; letter-spacing: -0.03em; margin-bottom: 16px; }
 
-    /* ——— Results bar ——— */
-    .results {
-      padding: 40px 0 80px;
-    }
+    .toolbar { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 18px; flex-wrap: wrap; }
+    .toolbar-left { display: flex; align-items: center; gap: 12px; }
+    .count { color: var(--muted); font-size: 0.92rem; }
+    .sort { display: flex; align-items: center; gap: 8px; font-size: 0.9rem; color: var(--muted); }
+    .sort select { font: inherit; font-size: 0.9rem; color: var(--navy); font-weight: 600; border: 1px solid var(--border); border-radius: 10px; padding: 8px 12px; background: #fff; cursor: pointer; }
 
-    .results h2 {
-      font-size: 1.35rem;
-      letter-spacing: -0.03em;
-      margin-bottom: 16px;
-    }
+    /* View toggle */
+    .view-toggle { display: flex; gap: 4px; background: var(--bg-subtle); border: 1px solid var(--border); border-radius: 10px; padding: 3px; }
+    .view-btn { border: none; background: transparent; color: var(--muted); font: inherit; font-size: 0.85rem; font-weight: 500; padding: 6px 12px; border-radius: 7px; cursor: pointer; transition: background 0.15s, color 0.15s; }
+    .view-btn.is-active { background: var(--navy); color: #fff; }
 
-    .toolbar {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: 12px;
-      margin-bottom: 18px;
-      flex-wrap: wrap;
-    }
-
-    .count {
-      color: var(--muted);
-      font-size: 0.92rem;
-    }
-
-    .sort {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      font-size: 0.9rem;
-      color: var(--muted);
-    }
-
-    .sort select {
-      font: inherit;
-      font-size: 0.9rem;
-      color: var(--navy);
-      font-weight: 600;
-      border: 1px solid var(--border);
-      border-radius: 10px;
-      padding: 8px 12px;
-      background: #fff;
-      cursor: pointer;
-    }
-
-    /* ——— Cards ——— */
-    .list {
-      display: flex;
-      flex-direction: column;
-      gap: 16px;
-    }
-
-    .card {
-      position: relative;
-      width: 100%;
-      background: #fff;
-      border: 1px solid var(--border);
-      border-radius: var(--radius);
-      padding: 24px 24px 20px;
-      box-shadow: var(--shadow);
-      transition: transform 0.15s ease, box-shadow 0.15s ease;
-    }
-
-    .card:hover {
-      transform: translateY(-2px);
-      box-shadow: 0 12px 32px rgba(27, 58, 107, 0.12);
-    }
-
-    .card-top {
-      display: flex;
-      justify-content: space-between;
-      align-items: flex-start;
-      gap: 16px;
-    }
-
-    .card h3 {
-      font-size: 1.28rem;
-      letter-spacing: -0.02em;
-      line-height: 1.25;
-      padding-right: 8px;
-    }
-
-    .meta {
-      color: var(--muted);
-      font-size: 0.9rem;
-      margin-top: 4px;
-    }
-
-    .price {
-      color: var(--navy);
-      font-weight: 700;
-      font-size: 0.98rem;
-      white-space: nowrap;
-    }
-
-    .type {
-      display: inline-block;
-      margin-top: 10px;
-      font-size: 0.75rem;
-      font-weight: 600;
-      letter-spacing: 0.04em;
-      text-transform: uppercase;
-      color: var(--accent);
-      background: var(--navy-soft);
-      padding: 4px 8px;
-      border-radius: 6px;
-    }
-
-    .desc {
-      margin-top: 12px;
-      color: #374151;
-      font-size: 0.95rem;
-    }
-
-    .tags {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 6px;
-      margin-top: 14px;
-    }
-
-    .tag {
-      background: #f3f4f6;
-      color: #4b5563;
-      font-size: 0.78rem;
-      font-weight: 500;
-      padding: 4px 9px;
-      border-radius: 999px;
-    }
-
-    .badge {
-      position: absolute;
-      top: 14px;
-      left: 14px;
-      background: var(--navy);
-      color: #fff;
-      font-size: 0.7rem;
-      font-weight: 700;
-      letter-spacing: 0.04em;
-      text-transform: uppercase;
-      padding: 4px 8px;
-      border-radius: 6px;
-    }
-
+    /* Cards */
+    .list { display: flex; flex-direction: column; gap: 16px; }
+    .card { position: relative; width: 100%; background: #fff; border: 1px solid var(--border); border-radius: var(--radius); padding: 24px 24px 20px; box-shadow: var(--shadow); transition: transform 0.15s, box-shadow 0.15s; }
+    .card:hover { transform: translateY(-2px); box-shadow: 0 12px 32px rgba(27,58,107,0.12); }
+    .card-top { display: flex; justify-content: space-between; align-items: flex-start; gap: 16px; }
+    .card h3 { font-size: 1.28rem; letter-spacing: -0.02em; line-height: 1.25; padding-right: 8px; }
+    .meta { color: var(--muted); font-size: 0.9rem; margin-top: 4px; }
+    .address { color: var(--muted); font-size: 0.82rem; margin-top: 2px; font-style: italic; }
+    .price { color: var(--navy); font-weight: 700; font-size: 0.98rem; white-space: nowrap; }
+    .type { display: inline-block; margin-top: 10px; font-size: 0.75rem; font-weight: 600; letter-spacing: 0.04em; text-transform: uppercase; color: var(--accent); background: var(--navy-soft); padding: 4px 8px; border-radius: 6px; }
+    .desc { margin-top: 12px; color: #374151; font-size: 0.95rem; }
+    .tags { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 14px; }
+    .tag { background: #f3f4f6; color: #4b5563; font-size: 0.78rem; font-weight: 500; padding: 4px 9px; border-radius: 999px; }
+    .badge { position: absolute; top: 14px; left: 14px; background: var(--navy); color: #fff; font-size: 0.7rem; font-weight: 700; letter-spacing: 0.04em; text-transform: uppercase; padding: 4px 8px; border-radius: 6px; }
     .card.is-featured { padding-top: 42px; }
-
-    .card-link {
-      display: inline-flex;
-      align-items: center;
-      gap: 8px;
-      margin-top: 16px;
-      color: var(--navy);
-      font-weight: 600;
-      font-size: 0.92rem;
-      text-decoration: none;
-    }
-
-    .card-link::after {
-      content: "";
-      width: 7px;
-      height: 7px;
-      border-right: 2px solid currentColor;
-      border-top: 2px solid currentColor;
-      transform: rotate(45deg);
-    }
-
+    .card-link { display: inline-flex; align-items: center; gap: 8px; margin-top: 16px; color: var(--navy); font-weight: 600; font-size: 0.92rem; text-decoration: none; }
+    .card-link::after { content: ""; width: 7px; height: 7px; border-right: 2px solid currentColor; border-top: 2px solid currentColor; transform: rotate(45deg); }
     .card-link:hover { color: var(--accent); }
-    .card-link.is-disabled {
-      color: #9ca3af;
-      pointer-events: none;
-    }
-
-    .empty {
-      text-align: center;
-      color: var(--muted);
-      padding: 48px 16px;
-      border: 1px dashed var(--border);
-      border-radius: var(--radius);
-      background: var(--bg-subtle);
-    }
-
+    .card-link.is-disabled { color: #9ca3af; pointer-events: none; }
+    .empty { text-align: center; color: var(--muted); padding: 48px 16px; border: 1px dashed var(--border); border-radius: var(--radius); background: var(--bg-subtle); }
     .empty.is-error { color: #9b1c1c; }
 
-    /* ——— Partner CTA ——— */
-    .partner {
-      background: var(--bg-subtle);
-      border-top: 1px solid var(--border);
-      padding: 56px 0;
-      text-align: center;
-    }
+    /* Map */
+    #map-container { display: none; border-radius: var(--radius); overflow: hidden; border: 1px solid var(--border); box-shadow: var(--shadow); }
+    #map-container.is-visible { display: block; }
+    #map { height: 600px; width: 100%; }
+    .map-loading { display: flex; align-items: center; justify-content: center; height: 600px; color: var(--muted); font-size: 0.95rem; background: var(--bg-subtle); border-radius: var(--radius); }
 
+    /* Leaflet popup */
+    .gym-popup h4 { font-size: 0.95rem; font-weight: 700; color: var(--navy); margin-bottom: 4px; }
+    .gym-popup .p-meta { font-size: 0.82rem; color: var(--muted); margin-bottom: 4px; }
+    .gym-popup .p-price { font-size: 0.88rem; font-weight: 600; color: var(--navy); margin-bottom: 8px; }
+    .gym-popup a { font-size: 0.85rem; color: var(--navy); font-weight: 600; text-decoration: none; }
+    .gym-popup a:hover { text-decoration: underline; }
+
+    /* Partner */
+    .partner { background: var(--bg-subtle); border-top: 1px solid var(--border); padding: 56px 0; text-align: center; }
     .partner h2 { color: var(--navy); margin-bottom: 8px; }
     .partner p { color: var(--muted); margin-bottom: 18px; }
 
-    footer {
-      padding: 24px 0 36px;
-      text-align: center;
-      color: var(--muted);
-      font-size: 0.85rem;
-    }
+    footer { padding: 24px 0 36px; text-align: center; color: var(--muted); font-size: 0.85rem; }
 
     @media (max-width: 560px) {
       .hero { padding-top: 48px; }
       .search { flex-direction: column; }
       .btn-navy { width: 100%; }
       .card-top { flex-direction: column; gap: 6px; }
+      #map { height: 420px; }
     }
   </style>
 </head>
@@ -404,13 +136,7 @@
         <h1>Vind de juiste gym, waar je ook bent</h1>
         <p class="subtitle">Vergelijk gyms op prijs, sfeer en apparatuur</p>
         <form class="search" id="search-form" role="search">
-          <input
-            id="search-input"
-            type="search"
-            placeholder="Zoek op stad, buurt of gymnaam"
-            autocomplete="off"
-            aria-label="Zoek op stad, buurt of gymnaam"
-          />
+          <input id="search-input" type="search" placeholder="Zoek op stad, buurt of gymnaam" autocomplete="off" aria-label="Zoek op stad, buurt of gymnaam" />
           <button class="btn-navy" type="submit">Zoeken</button>
         </form>
         <div class="filters" id="filters" role="group" aria-label="Filters"></div>
@@ -421,7 +147,13 @@
       <div class="wrap">
         <h2>Populaire gyms in de buurt</h2>
         <div class="toolbar">
-          <p class="count" id="results-count"></p>
+          <div class="toolbar-left">
+            <p class="count" id="results-count"></p>
+            <div class="view-toggle">
+              <button class="view-btn is-active" id="btn-list" onclick="setView('list')">Lijst</button>
+              <button class="view-btn" id="btn-map" onclick="setView('map')">Kaart</button>
+            </div>
+          </div>
           <label class="sort">
             Sorteren
             <select id="sort-select" aria-label="Sorteer resultaten">
@@ -433,6 +165,9 @@
           </label>
         </div>
         <div class="list" id="gym-list"></div>
+        <div id="map-container">
+          <div id="map"></div>
+        </div>
       </div>
     </section>
 
@@ -449,11 +184,17 @@
     <div class="wrap">© 2026 Gymfinder · België &amp; Nederland</div>
   </footer>
 
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
   <script>
     const GYMS_ENDPOINT = '/.netlify/functions/getGyms';
 
     let gyms = [];
     let loadError = '';
+    let currentView = 'list';
+    let mapInstance = null;
+    let mapMarkers = [];
+    let mapInitialized = false;
+    const geocodeCache = {};
 
     const FILTERS = [
       { id: 'all', label: 'Alle gyms' },
@@ -465,84 +206,70 @@
       { id: 'Premium', label: 'Premium' }
     ];
 
-    const state = {
-      query: '',
-      filter: 'all',
-      sort: 'relevant'
-    };
+    const state = { query: '', filter: 'all', sort: 'relevant' };
 
     const els = {
       filters: document.getElementById('filters'),
       list: document.getElementById('gym-list'),
+      mapContainer: document.getElementById('map-container'),
       count: document.getElementById('results-count'),
       form: document.getElementById('search-form'),
       input: document.getElementById('search-input'),
-      sort: document.getElementById('sort-select')
+      sort: document.getElementById('sort-select'),
+      btnList: document.getElementById('btn-list'),
+      btnMap: document.getElementById('btn-map')
     };
 
-    function escapeHtml(value) {
-      return String(value)
-        .replace(/&/g, '&amp;')
-        .replace(/</g, '&lt;')
-        .replace(/>/g, '&gt;')
-        .replace(/"/g, '&quot;');
+    function escapeHtml(v) {
+      return String(v).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
     }
 
-    function formatPrice(price) {
-      if (price === null || price === undefined || price === '') {
-        return 'Prijs op aanvraag';
-      }
-      return '€' + price + ' / dag';
+    function formatPrice(p) {
+      if (p === null || p === undefined || p === '') return 'Prijs op aanvraag';
+      return '€' + p + ' / dag';
     }
 
-    function parsePrice(value) {
-      if (value === null || value === undefined || value === '') return null;
-      if (typeof value === 'number' && !Number.isNaN(value)) return value;
-      const match = String(value).replace(',', '.').match(/-?\d+(\.\d+)?/);
-      return match ? Number(match[0]) : null;
+    function parsePrice(v) {
+      if (v === null || v === undefined || v === '') return null;
+      if (typeof v === 'number' && !Number.isNaN(v)) return v;
+      const m = String(v).replace(',','.').match(/-?\d+(\.\d+)?/);
+      return m ? Number(m[0]) : null;
     }
 
-    function normalizeTags(value) {
-      if (!value) return [];
-      if (Array.isArray(value)) {
-        return value.map(function (tag) { return String(tag).trim(); }).filter(Boolean);
-      }
-      return String(value).split(',').map(function (tag) { return tag.trim(); }).filter(Boolean);
+    function normalizeTags(v) {
+      if (!v) return [];
+      if (Array.isArray(v)) return v.map(t => String(t).trim()).filter(Boolean);
+      return String(v).split(',').map(t => t.trim()).filter(Boolean);
     }
 
     function field(fields, ...names) {
-      for (var i = 0; i < names.length; i++) {
-        if (fields[names[i]] !== undefined && fields[names[i]] !== null) {
-          return fields[names[i]];
-        }
+      for (let n of names) {
+        if (fields[n] !== undefined && fields[n] !== null) return fields[n];
       }
       return '';
     }
 
-    // Airtable: Name, Stad, Land, Type, Beschrijving, Prijs dagpas,
-    // Tags, Website URL, Featured, Dagpas beschikbaar
     function mapGym(record, index) {
-      const fields = record && record.fields ? record.fields : (record || {});
+      const f = record && record.fields ? record.fields : (record || {});
       return {
         id: record && record.id ? record.id : String(index),
-        name: String(field(fields, 'Name', 'name')),
-        city: String(field(fields, 'Stad', 'city')),
-        country: String(field(fields, 'Land', 'country')),
-        type: String(field(fields, 'Type', 'type')),
-        description: String(field(fields, 'Beschrijving', 'description')),
-        price: parsePrice(field(fields, 'Prijs dagpas', 'price')),
-        tags: normalizeTags(field(fields, 'Tags', 'tags')),
-        url: String(field(fields, 'Website URL', 'url')),
-        featured: Boolean(field(fields, 'Featured', 'featured')),
-        dagpas: Boolean(field(fields, 'Dagpas beschikbaar', 'dagpas')),
+        name: String(field(f, 'Name', 'name')),
+        city: String(field(f, 'Stad', 'city')),
+        country: String(field(f, 'Land', 'country')),
+        type: String(field(f, 'Type', 'type')),
+        description: String(field(f, 'Beschrijving', 'description')),
+        price: parsePrice(field(f, 'Prijs dagpas', 'price')),
+        tags: normalizeTags(field(f, 'Tags', 'tags')),
+        url: String(field(f, 'Website URL', 'url')),
+        featured: Boolean(field(f, 'Featured', 'featured')),
+        dagpas: Boolean(field(f, 'Dagpas beschikbaar', 'dagpas')),
+        adres: String(field(f, 'Adres', 'adres')),
         _index: index
       };
     }
 
-    // Tag pills match the filter label (case-insensitive).
-    function hasTag(gym, value) {
-      const needle = value.toLowerCase();
-      return (gym.tags || []).some((tag) => String(tag).toLowerCase() === needle);
+    function hasTag(gym, v) {
+      return (gym.tags || []).some(t => String(t).toLowerCase() === v.toLowerCase());
     }
 
     function matchesFilter(gym) {
@@ -554,172 +281,172 @@
     function matchesQuery(gym) {
       const q = state.query.trim().toLowerCase();
       if (!q) return true;
-      const haystack = [
-        gym.name,
-        gym.city,
-        gym.country,
-        gym.type,
-        gym.description,
-        ...(gym.tags || [])
-      ].join(' ').toLowerCase();
-      return haystack.includes(q);
+      return [gym.name, gym.city, gym.country, gym.type, gym.description, ...(gym.tags||[])].join(' ').toLowerCase().includes(q);
     }
 
     function sortGyms(list) {
       const items = list.slice();
       if (state.sort === 'price-asc') {
-        items.sort((a, b) => {
-          const ap = a.price == null;
-          const bp = b.price == null;
-          if (ap && bp) return a._index - b._index;
-          if (ap) return 1;
-          if (bp) return -1;
-          return a.price - b.price;
-        });
+        items.sort((a,b) => { if (a.price==null&&b.price==null) return a._index-b._index; if (a.price==null) return 1; if (b.price==null) return -1; return a.price-b.price; });
       } else if (state.sort === 'price-desc') {
-        items.sort((a, b) => {
-          const ap = a.price == null;
-          const bp = b.price == null;
-          if (ap && bp) return a._index - b._index;
-          if (ap) return 1;
-          if (bp) return -1;
-          return b.price - a.price;
-        });
+        items.sort((a,b) => { if (a.price==null&&b.price==null) return a._index-b._index; if (a.price==null) return 1; if (b.price==null) return -1; return b.price-a.price; });
       } else if (state.sort === 'nearby') {
-        // No coordinates yet: alphabetical by city, then name.
-        items.sort((a, b) => {
-          const city = a.city.localeCompare(b.city, 'nl');
-          return city !== 0 ? city : a.name.localeCompare(b.name, 'nl');
-        });
+        items.sort((a,b) => { const c = a.city.localeCompare(b.city,'nl'); return c!==0?c:a.name.localeCompare(b.name,'nl'); });
       } else {
-        // Meest relevant: featured first, then original data order.
-        items.sort((a, b) => {
-          if (a.featured !== b.featured) return a.featured ? -1 : 1;
-          return a._index - b._index;
-        });
+        items.sort((a,b) => { if (a.featured!==b.featured) return a.featured?-1:1; return a._index-b._index; });
       }
       return items;
     }
 
     function visibleGyms() {
-      return sortGyms(gyms.filter((gym) => matchesFilter(gym) && matchesQuery(gym)));
+      return sortGyms(gyms.filter(g => matchesFilter(g) && matchesQuery(g)));
     }
 
     function renderFilters() {
-      els.filters.innerHTML = FILTERS.map((filter) => {
-        const active = state.filter === filter.id ? ' is-active' : '';
-        return '<button type="button" class="pill' + active + '" data-filter="' +
-          escapeHtml(filter.id) + '">' + escapeHtml(filter.label) + '</button>';
+      els.filters.innerHTML = FILTERS.map(f => {
+        const active = state.filter === f.id ? ' is-active' : '';
+        return '<button type="button" class="pill'+active+'" data-filter="'+escapeHtml(f.id)+'">'+escapeHtml(f.label)+'</button>';
       }).join('');
     }
 
     function renderCards() {
       if (loadError) {
         els.count.textContent = '';
-        els.list.innerHTML = '<p class="empty is-error">' + escapeHtml(loadError) + '</p>';
+        els.list.innerHTML = '<p class="empty is-error">'+escapeHtml(loadError)+'</p>';
         return;
       }
-
       const items = visibleGyms();
       const n = items.length;
       els.count.textContent = n === 1 ? '1 resultaat' : n + ' resultaten';
-
       if (!n) {
         els.list.innerHTML = '<p class="empty">Geen gyms gevonden. Probeer een andere zoekterm of filter.</p>';
         return;
       }
-
-      els.list.innerHTML = items.map((gym) => {
+      els.list.innerHTML = items.map(gym => {
         const featured = gym.featured ? ' is-featured' : '';
         const badge = gym.featured ? '<span class="badge">Uitgelicht</span>' : '';
-        const desc = gym.description
-          ? '<p class="desc">' + escapeHtml(gym.description) + '</p>'
-          : '';
-        const tags = (gym.tags || []).map((tag) =>
-          '<span class="tag">' + escapeHtml(tag) + '</span>'
-        ).join('');
-        const hasUrl = Boolean(gym.url);
-        const link = hasUrl
-          ? '<a class="card-link" href="' + escapeHtml(gym.url) + '" target="_blank" rel="noopener noreferrer">Bekijk gym</a>'
+        const desc = gym.description ? '<p class="desc">'+escapeHtml(gym.description)+'</p>' : '';
+        const adresLine = gym.adres ? '<p class="address">'+escapeHtml(gym.adres)+'</p>' : '';
+        const tags = (gym.tags||[]).map(t => '<span class="tag">'+escapeHtml(t)+'</span>').join('');
+        const link = gym.url
+          ? '<a class="card-link" href="'+escapeHtml(gym.url)+'" target="_blank" rel="noopener noreferrer">Bekijk gym</a>'
           : '<span class="card-link is-disabled">Bekijk gym</span>';
-
-        return (
-          '<article class="card' + featured + '">' +
-            badge +
-            '<div class="card-top">' +
-              '<div>' +
-                '<h3>' + escapeHtml(gym.name) + '</h3>' +
-                '<p class="meta">' + escapeHtml(gym.city) + ', ' + escapeHtml(gym.country) + '</p>' +
-                '<span class="type">' + escapeHtml(gym.type) + '</span>' +
-              '</div>' +
-              '<div class="price">' + escapeHtml(formatPrice(gym.price)) + '</div>' +
-            '</div>' +
-            desc +
-            '<div class="tags">' + tags + '</div>' +
-            link +
-          '</article>'
-        );
+        return '<article class="card'+featured+'">'+badge+'<div class="card-top"><div><h3>'+escapeHtml(gym.name)+'</h3><p class="meta">'+escapeHtml(gym.city)+', '+escapeHtml(gym.country)+'</p>'+adresLine+'<span class="type">'+escapeHtml(gym.type)+'</span></div><div class="price">'+escapeHtml(formatPrice(gym.price))+'</div></div>'+desc+'<div class="tags">'+tags+'</div>'+link+'</article>';
       }).join('');
     }
 
     function render() {
       renderFilters();
-      renderCards();
+      if (currentView === 'list') {
+        renderCards();
+      } else {
+        updateMapMarkers();
+      }
     }
 
-    els.filters.addEventListener('click', (event) => {
-      const button = event.target.closest('[data-filter]');
-      if (!button) return;
-      const id = button.getAttribute('data-filter');
-
-      // Alle gyms always resets. Clicking the active pill deactivates it.
-      if (id === 'all') {
-        state.filter = 'all';
-      } else if (state.filter === id) {
-        state.filter = 'all';
-      } else {
-        state.filter = id;
+    /* ——— VIEW TOGGLE ——— */
+    function setView(v) {
+      currentView = v;
+      els.btnList.classList.toggle('is-active', v === 'list');
+      els.btnMap.classList.toggle('is-active', v === 'map');
+      els.list.style.display = v === 'list' ? '' : 'none';
+      els.mapContainer.classList.toggle('is-visible', v === 'map');
+      if (v === 'map') {
+        initMap();
       }
+    }
+
+    /* ——— MAP ——— */
+    function initMap() {
+      if (!mapInitialized) {
+        mapInstance = L.map('map').setView([50.85, 4.60], 8);
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+          attribution: '© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>',
+          maxZoom: 19
+        }).addTo(mapInstance);
+        mapInitialized = true;
+      }
+      setTimeout(() => mapInstance.invalidateSize(), 100);
+      updateMapMarkers();
+    }
+
+    const navyIcon = L.divIcon({
+      html: '<div style="width:14px;height:14px;border-radius:50%;background:#1B3A6B;border:2px solid white;box-shadow:0 2px 6px rgba(0,0,0,0.3)"></div>',
+      iconSize: [14, 14], iconAnchor: [7, 7], className: ''
+    });
+    const regularIcon = L.divIcon({
+      html: '<div style="width:12px;height:12px;border-radius:50%;background:#2A5298;border:2px solid white;box-shadow:0 2px 6px rgba(0,0,0,0.3)"></div>',
+      iconSize: [12, 12], iconAnchor: [6, 6], className: ''
+    });
+
+    async function geocodeAddress(adres) {
+      const cacheKey = 'geo_' + adres;
+      if (geocodeCache[cacheKey]) return geocodeCache[cacheKey];
+      try {
+        const stored = localStorage.getItem(cacheKey);
+        if (stored) { const r = JSON.parse(stored); geocodeCache[cacheKey] = r; return r; }
+      } catch(e) {}
+      try {
+        const url = 'https://nominatim.openstreetmap.org/search?q=' + encodeURIComponent(adres) + '&format=json&limit=1';
+        const res = await fetch(url, { headers: { 'Accept-Language': 'nl' } });
+        const data = await res.json();
+        if (data && data[0]) {
+          const result = { lat: parseFloat(data[0].lat), lng: parseFloat(data[0].lon) };
+          geocodeCache[cacheKey] = result;
+          try { localStorage.setItem(cacheKey, JSON.stringify(result)); } catch(e) {}
+          return result;
+        }
+      } catch(e) {}
+      return null;
+    }
+
+    async function updateMapMarkers() {
+      if (!mapInitialized) return;
+      mapMarkers.forEach(m => mapInstance.removeLayer(m));
+      mapMarkers = [];
+      const items = visibleGyms().filter(g => g.adres);
+      for (let i = 0; i < items.length; i++) {
+        const gym = items[i];
+        if (i > 0) await new Promise(r => setTimeout(r, 1000));
+        const coords = await geocodeAddress(gym.adres);
+        if (!coords) continue;
+        const icon = gym.featured ? navyIcon : regularIcon;
+        const popup = '<div class="gym-popup"><h4>'+escapeHtml(gym.name)+'</h4><p class="p-meta">'+escapeHtml(gym.city)+', '+escapeHtml(gym.country)+'</p><p class="p-meta">'+escapeHtml(gym.type)+'</p><p class="p-price">'+escapeHtml(formatPrice(gym.price))+'</p>'+(gym.url?'<a href="'+escapeHtml(gym.url)+'" target="_blank" rel="noopener">Bekijk gym →</a>':'')+'</div>';
+        const marker = L.marker([coords.lat, coords.lng], { icon }).addTo(mapInstance).bindPopup(popup);
+        mapMarkers.push(marker);
+      }
+    }
+
+    /* ——— EVENTS ——— */
+    els.filters.addEventListener('click', e => {
+      const btn = e.target.closest('[data-filter]');
+      if (!btn) return;
+      const id = btn.getAttribute('data-filter');
+      state.filter = (id === 'all' || state.filter === id) ? 'all' : id;
+      if (id === 'all') state.filter = 'all';
       render();
     });
 
-    els.form.addEventListener('submit', (event) => {
-      event.preventDefault();
-      state.query = els.input.value;
-      render();
-    });
+    els.form.addEventListener('submit', e => { e.preventDefault(); state.query = els.input.value; render(); });
+    els.input.addEventListener('input', () => { state.query = els.input.value; render(); });
+    els.sort.addEventListener('change', () => { state.sort = els.sort.value; render(); });
 
-    els.input.addEventListener('input', () => {
-      state.query = els.input.value;
-      render();
-    });
-
-    els.sort.addEventListener('change', () => {
-      state.sort = els.sort.value;
-      render();
-    });
-
+    /* ——— LOAD ——— */
     async function loadGyms() {
       els.count.textContent = '';
       els.list.innerHTML = '<p class="empty">Gyms laden…</p>';
       renderFilters();
-
       try {
         const response = await fetch(GYMS_ENDPOINT);
-        const data = await response.json().catch(function () { return {}; });
-
-        if (!response.ok) {
-          throw new Error(data.error || 'Gyms konden niet geladen worden');
-        }
-
+        const data = await response.json().catch(() => ({}));
+        if (!response.ok) throw new Error(data.error || 'Gyms konden niet geladen worden');
         const records = Array.isArray(data.records) ? data.records : [];
         gyms = records.map(mapGym);
         loadError = '';
-      } catch (err) {
+      } catch(err) {
         gyms = [];
         loadError = 'Gyms konden niet geladen worden. Probeer het later opnieuw.';
       }
-
       render();
     }
 
