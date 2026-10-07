@@ -9,6 +9,8 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+  <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.css" />
+  <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.Default.css" />
   <style>
     :root {
       --navy: #1B3A6B;
@@ -165,6 +167,7 @@
   </footer>
 
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <script src="https://unpkg.com/leaflet.markercluster@1.5.3/dist/leaflet.markercluster.js"></script>
   <script>
     const GYMS_ENDPOINT = '/.netlify/functions/getGyms';
     let gyms = [];
@@ -172,6 +175,7 @@
     let currentView = 'list';
     let mapInstance = null;
     let mapMarkers = [];
+    let clusterGroup = null;
     let mapInitialized = false;
     const geocodeCache = {};
 
@@ -326,6 +330,22 @@
           attribution: '© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>',
           maxZoom: 19
         }).addTo(mapInstance);
+        clusterGroup = L.markerClusterGroup({
+          maxClusterRadius: 50,
+          iconCreateFunction: function(cluster) {
+            const count = cluster.getChildCount();
+            return L.divIcon({
+              html: '<svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" viewBox="0 0 40 40">'
+                + '<circle cx="20" cy="20" r="18" fill="#1B3A6B" stroke="white" stroke-width="2"/>'
+                + '<text x="20" y="25" text-anchor="middle" font-family="Inter,sans-serif" font-size="13" font-weight="700" fill="white">' + count + '</text>'
+                + '</svg>',
+              iconSize: [40, 40],
+              iconAnchor: [20, 20],
+              className: ''
+            });
+          }
+        });
+        mapInstance.addLayer(clusterGroup);
         mapInitialized = true;
       }
       setTimeout(() => mapInstance.invalidateSize(), 100);
@@ -375,7 +395,7 @@
 
     async function updateMapMarkers() {
       if (!mapInitialized) return;
-      mapMarkers.forEach(m => mapInstance.removeLayer(m));
+      clusterGroup.clearLayers();
       mapMarkers = [];
       const items = visibleGyms().filter(g => g.adres);
 
@@ -392,13 +412,12 @@
             return { gym, coords: r };
           }
         } catch(e) {}
-        /* Niet gecached: kleine vertraging per item om rate limit te respecteren */
         await new Promise(r => setTimeout(r, i * 300));
         const coords = await geocodeAddress(gym.adres);
         return { gym, coords };
       }));
 
-      /* Alle markers tegelijk toevoegen */
+      /* Alle markers tegelijk toevoegen aan clusterGroup */
       results.forEach(({ gym, coords }) => {
         if (!coords) return;
         const icon = makePinIcon(gym.featured);
@@ -409,7 +428,8 @@
           + '<p class="p-price">'+escapeHtml(formatPrice(gym.price))+'</p>'
           + (gym.url ? '<a href="'+escapeHtml(gym.url)+'" target="_blank" rel="noopener">Bekijk gym →</a>' : '')
           + '</div>';
-        const marker = L.marker([coords.lat, coords.lng], { icon }).addTo(mapInstance).bindPopup(popup);
+        const marker = L.marker([coords.lat, coords.lng], { icon }).bindPopup(popup);
+        clusterGroup.addLayer(marker);
         mapMarkers.push(marker);
       });
     }
