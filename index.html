@@ -242,6 +242,8 @@
         featured: Boolean(field(f, 'Featured', 'featured')),
         dagpas: Boolean(field(f, 'Dagpas beschikbaar', 'dagpas')),
         adres: String(field(f, 'Adres', 'adres')),
+        lat: parseFloat(field(f, 'Lat', 'lat')) || null,
+        lng: parseFloat(field(f, 'Lng', 'lng')) || null,
         _index: index
       };
     }
@@ -393,52 +395,20 @@
       return null;
     }
 
-    async function updateMapMarkers() {
+    function updateMapMarkers() {
       if (!mapInitialized) return;
       clusterGroup.clearLayers();
       mapMarkers = [];
 
-      /* Debug: als er geen Airtable data is, gebruik testpunten */
-      const allItems = visibleGyms();
-      const items = allItems.filter(g => g.adres && g.adres.trim() !== '' && g.adres !== 'undefined');
+      /* Gebruik lat/lng direct uit Airtable — geen geocoding meer */
+      const items = visibleGyms().filter(g => g.lat && g.lng);
 
-      /* Als er geen items met adres zijn: toon testmarkers zodat kaart werkt */
       if (items.length === 0) {
-        const testPoints = [
-          { lat: 51.4003, lng: 4.7747, name: 'Testgym Hoogstraten' },
-          { lat: 51.2213, lng: 4.3997, name: 'Testgym Antwerpen' },
-          { lat: 51.0543, lng: 3.7174, name: 'Testgym Gent' }
-        ];
-        testPoints.forEach(p => {
-          const icon = makePinIcon(false);
-          const marker = L.marker([p.lat, p.lng], { icon })
-            .bindPopup('<div class="gym-popup"><h4>' + p.name + '</h4><p class="p-meta">Testdata — voeg adressen toe in Airtable</p></div>');
-          clusterGroup.addLayer(marker);
-        });
+        console.log('Geen gyms met coördinaten gevonden');
         return;
       }
 
-      /* Alle adressen parallel geocoden — gecachte meteen, rest met kleine vertraging */
-      const results = await Promise.all(items.map(async (gym, i) => {
-        const cacheKey = 'geo_' + gym.adres;
-        const cached = geocodeCache[cacheKey];
-        if (cached) return { gym, coords: cached };
-        try {
-          const stored = localStorage.getItem(cacheKey);
-          if (stored) {
-            const r = JSON.parse(stored);
-            geocodeCache[cacheKey] = r;
-            return { gym, coords: r };
-          }
-        } catch(e) {}
-        await new Promise(r => setTimeout(r, i * 300));
-        const coords = await geocodeAddress(gym.adres);
-        return { gym, coords };
-      }));
-
-      /* Alle markers tegelijk toevoegen aan clusterGroup */
-      results.forEach(({ gym, coords }) => {
-        if (!coords) return;
+      items.forEach(gym => {
         const icon = makePinIcon(gym.featured);
         const popup = '<div class="gym-popup">'
           + '<h4>'+escapeHtml(gym.name)+'</h4>'
@@ -447,7 +417,7 @@
           + '<p class="p-price">'+escapeHtml(formatPrice(gym.price))+'</p>'
           + (gym.url ? '<a href="'+escapeHtml(gym.url)+'" target="_blank" rel="noopener">Bekijk gym →</a>' : '')
           + '</div>';
-        const marker = L.marker([coords.lat, coords.lng], { icon }).bindPopup(popup);
+        const marker = L.marker([gym.lat, gym.lng], { icon }).bindPopup(popup);
         clusterGroup.addLayer(marker);
         mapMarkers.push(marker);
       });
