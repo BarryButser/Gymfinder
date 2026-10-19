@@ -77,7 +77,7 @@
     .card-link.is-disabled { color: #9ca3af; pointer-events: none; }
     .empty { text-align: center; color: var(--muted); padding: 48px 16px; border: 1px dashed var(--border); border-radius: var(--radius); background: var(--bg-subtle); }
     .empty.is-error { color: #9b1c1c; }
-    #map-container { display: none; border-radius: var(--radius); overflow: hidden; border: 1px solid var(--border); box-shadow: var(--shadow); }
+    #map-container { display: none; border-radius: var(--radius); overflow: hidden; border: 1px solid var(--border); box-shadow: var(--shadow); position: relative; }
     #map-container.is-visible { display: block; }
     #map { height: 600px; width: 100%; }
     .gym-popup h4 { font-size: 0.95rem; font-weight: 700; color: var(--navy); margin-bottom: 4px; }
@@ -151,6 +151,15 @@
         <div class="list" id="gym-list"></div>
         <div id="map-container">
           <div id="map"></div>
+          <div id="map-legend" style="position:absolute;bottom:28px;left:12px;z-index:1000;background:rgba(255,255,255,0.95);border-radius:10px;padding:10px 14px;box-shadow:0 2px 8px rgba(0,0,0,0.15);font-family:Inter,sans-serif;font-size:12px;pointer-events:none;">
+            <div style="font-weight:600;margin-bottom:6px;color:#1a1a1a">Legenda</div>
+            <div style="display:flex;align-items:center;gap:6px;margin-bottom:4px"><svg width="12" height="16" viewBox="0 0 24 32"><path d="M12 0C5.4 0 0 5.4 0 12c0 9 12 20 12 20s12-11 12-20C24 5.4 18.6 0 12 0z" fill="#B8860B" stroke="white" stroke-width="2"/></svg>Uitgelicht</div>
+            <div style="display:flex;align-items:center;gap:6px;margin-bottom:4px"><svg width="12" height="16" viewBox="0 0 24 32"><path d="M12 0C5.4 0 0 5.4 0 12c0 9 12 20 12 20s12-11 12-20C24 5.4 18.6 0 12 0z" fill="#1B3A6B" stroke="white" stroke-width="2"/></svg>Fitness</div>
+            <div style="display:flex;align-items:center;gap:6px;margin-bottom:4px"><svg width="12" height="16" viewBox="0 0 24 32"><path d="M12 0C5.4 0 0 5.4 0 12c0 9 12 20 12 20s12-11 12-20C24 5.4 18.6 0 12 0z" fill="#1D6B3A" stroke="white" stroke-width="2"/></svg>Yoga / Wellness</div>
+            <div style="display:flex;align-items:center;gap:6px;margin-bottom:4px"><svg width="12" height="16" viewBox="0 0 24 32"><path d="M12 0C5.4 0 0 5.4 0 12c0 9 12 20 12 20s12-11 12-20C24 5.4 18.6 0 12 0z" fill="#B85C00" stroke="white" stroke-width="2"/></svg>Outdoor</div>
+            <div style="display:flex;align-items:center;gap:6px;margin-bottom:4px"><svg width="12" height="16" viewBox="0 0 24 32"><path d="M12 0C5.4 0 0 5.4 0 12c0 9 12 20 12 20s12-11 12-20C24 5.4 18.6 0 12 0z" fill="#5B2A8A" stroke="white" stroke-width="2"/></svg>Kinesist / Fysio</div>
+            <div style="display:flex;align-items:center;gap:6px"><svg width="12" height="16" viewBox="0 0 24 32"><path d="M12 0C5.4 0 0 5.4 0 12c0 9 12 20 12 20s12-11 12-20C24 5.4 18.6 0 12 0z" fill="#8B1A1A" stroke="white" stroke-width="2"/></svg>Powerlifting</div>
+          </div>
         </div>
       </div>
     </section>
@@ -253,7 +262,11 @@
     function matchesFilter(gym) {
       if (state.filter === 'all') return true;
       if (state.filter === 'dagpas') return gym.dagpas === true;
-      return hasTag(gym, state.filter);
+      const f = state.filter.toLowerCase();
+      /* Zoek in tags EN in type veld */
+      const inTags = (gym.tags || []).some(t => String(t).toLowerCase() === f);
+      const inType = String(gym.type || '').toLowerCase().includes(f);
+      return inTags || inType;
     }
     function matchesQuery(gym) {
       const q = state.query.trim().toLowerCase();
@@ -354,9 +367,20 @@
       updateMapMarkers();
     }
 
-    /* Druppelvorm pins */
-    function makePinIcon(featured) {
-      const color = featured ? '#1B3A6B' : '#2A5298';
+    /* Kleur per type */
+    function getTypeColor(gym) {
+      if (gym.featured) return '#B8860B';
+      const t = String(gym.type || '').toLowerCase();
+      if (t.includes('yoga') || t.includes('pilates') || t.includes('wellness')) return '#1D6B3A';
+      if (t.includes('outdoor') || t.includes('sport') || t.includes('bootcamp')) return '#B85C00';
+      if (t.includes('kinesist') || t.includes('fysio') || t.includes('revalidatie')) return '#5B2A8A';
+      if (t.includes('powerlifting') || t.includes('crossfit')) return '#8B1A1A';
+      return '#1B3A6B';
+    }
+
+    /* Druppelvorm pins met kleur per type */
+    function makePinIcon(gym) {
+      const color = getTypeColor(gym);
       const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="32" viewBox="0 0 24 32">
         <path d="M12 0C5.4 0 0 5.4 0 12c0 9 12 20 12 20s12-11 12-20C24 5.4 18.6 0 12 0z" fill="${color}" stroke="white" stroke-width="1.5"/>
         <circle cx="12" cy="12" r="4" fill="white" opacity="0.9"/>
@@ -409,7 +433,7 @@
       }
 
       items.forEach(gym => {
-        const icon = makePinIcon(gym.featured);
+        const icon = makePinIcon(gym);
         const popup = '<div class="gym-popup">'
           + '<h4>'+escapeHtml(gym.name)+'</h4>'
           + '<p class="p-meta">'+escapeHtml(gym.city)+', '+escapeHtml(gym.country)+'</p>'
