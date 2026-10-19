@@ -112,7 +112,7 @@
   <header class="nav">
     <div class="wrap nav-inner">
       <a class="logo" href="#">gymfinder</a>
-      <a class="btn-outline" href="#voor-gyms">Voor gyms</a>
+      <a class="btn-outline" href="/gym-aanmelden">Voor gyms</a>
     </div>
   </header>
   <main>
@@ -198,7 +198,8 @@
       { id: 'Premium', label: 'Premium' }
     ];
 
-    const state = { query: '', filter: 'all', sort: 'relevant' };
+    const PAGE_SIZE = 15;
+    const state = { query: '', filter: 'all', sort: 'relevant', page: 1 };
 
     const els = {
       filters: document.getElementById('filters'),
@@ -295,30 +296,46 @@
         return '<button type="button" class="pill'+active+'" data-filter="'+escapeHtml(f.id)+'">'+escapeHtml(f.label)+'</button>';
       }).join('');
     }
+    function gymCardHTML(gym) {
+      const featured = gym.featured ? ' is-featured' : '';
+      const badge = gym.featured ? '<span class="badge">Uitgelicht</span>' : '';
+      const desc = gym.description ? '<p class="desc">'+escapeHtml(gym.description)+'</p>' : '';
+      const adresLine = gym.adres ? '<p class="address">'+escapeHtml(gym.adres)+'</p>' : '';
+      const tags = (gym.tags||[]).map(t => '<span class="tag">'+escapeHtml(t)+'</span>').join('');
+      const link = gym.url
+        ? '<a class="card-link" href="'+escapeHtml(gym.url)+'" target="_blank" rel="noopener noreferrer">Bekijk gym</a>'
+        : '<span class="card-link is-disabled">Bekijk gym</span>';
+      return '<article class="card'+featured+'">'+badge+'<div class="card-top"><div><h3>'+escapeHtml(gym.name)+'</h3><p class="meta">'+escapeHtml(gym.city)+', '+escapeHtml(gym.country)+'</p>'+adresLine+'<span class="type">'+escapeHtml(gym.type)+'</span></div><div class="price">'+escapeHtml(formatPrice(gym.price))+'</div></div>'+desc+'<div class="tags">'+tags+'</div>'+link+'</article>';
+    }
+
     function renderCards() {
       if (loadError) {
         els.count.textContent = '';
         els.list.innerHTML = '<p class="empty is-error">'+escapeHtml(loadError)+'</p>';
         return;
       }
-      const items = visibleGyms();
-      const n = items.length;
+      const allItems = visibleGyms();
+      const n = allItems.length;
+      const shown = state.page * PAGE_SIZE;
+      const items = allItems.slice(0, shown);
       els.count.textContent = n === 1 ? '1 resultaat' : n + ' resultaten';
       if (!n) {
         els.list.innerHTML = '<p class="empty">Geen gyms gevonden. Probeer een andere zoekterm of filter.</p>';
         return;
       }
-      els.list.innerHTML = items.map(gym => {
-        const featured = gym.featured ? ' is-featured' : '';
-        const badge = gym.featured ? '<span class="badge">Uitgelicht</span>' : '';
-        const desc = gym.description ? '<p class="desc">'+escapeHtml(gym.description)+'</p>' : '';
-        const adresLine = gym.adres ? '<p class="address">'+escapeHtml(gym.adres)+'</p>' : '';
-        const tags = (gym.tags||[]).map(t => '<span class="tag">'+escapeHtml(t)+'</span>').join('');
-        const link = gym.url
-          ? '<a class="card-link" href="'+escapeHtml(gym.url)+'" target="_blank" rel="noopener noreferrer">Bekijk gym</a>'
-          : '<span class="card-link is-disabled">Bekijk gym</span>';
-        return '<article class="card'+featured+'">'+badge+'<div class="card-top"><div><h3>'+escapeHtml(gym.name)+'</h3><p class="meta">'+escapeHtml(gym.city)+', '+escapeHtml(gym.country)+'</p>'+adresLine+'<span class="type">'+escapeHtml(gym.type)+'</span></div><div class="price">'+escapeHtml(formatPrice(gym.price))+'</div></div>'+desc+'<div class="tags">'+tags+'</div>'+link+'</article>';
-      }).join('');
+      const cards = items.map(gymCardHTML).join('');
+      const hasMore = shown < n;
+      const remaining = n - shown;
+      const loadMoreBtn = hasMore
+        ? '<div style="text-align:center;margin-top:24px"><button onclick="loadMore()" style="background:#fff;border:1.5px solid #1B3A6B;color:#1B3A6B;border-radius:999px;padding:12px 28px;font:inherit;font-weight:600;font-size:0.95rem;cursor:pointer;transition:background 0.15s,color 0.15s" onmouseover="this.style.background='#1B3A6B';this.style.color='#fff'" onmouseout="this.style.background='#fff';this.style.color='#1B3A6B'">Meer gyms laden ('+remaining+' resterend)</button></div>'
+        : '';
+      els.list.innerHTML = cards + loadMoreBtn;
+    }
+
+    function loadMore() {
+      state.page++;
+      renderCards();
+      /* Scroll niet terug naar boven */
     }
     function render() {
       renderFilters();
@@ -452,11 +469,12 @@
       if (!btn) return;
       const id = btn.getAttribute('data-filter');
       state.filter = (id === 'all' || state.filter === id) ? 'all' : id;
+      state.page = 1;
       render();
     });
-    els.form.addEventListener('submit', e => { e.preventDefault(); state.query = els.input.value; render(); });
-    els.input.addEventListener('input', () => { state.query = els.input.value; render(); });
-    els.sort.addEventListener('change', () => { state.sort = els.sort.value; render(); });
+    els.form.addEventListener('submit', e => { e.preventDefault(); state.query = els.input.value; state.page = 1; render(); });
+    els.input.addEventListener('input', () => { state.query = els.input.value; state.page = 1; render(); });
+    els.sort.addEventListener('change', () => { state.sort = els.sort.value; state.page = 1; render(); });
 
     async function loadGyms() {
       els.count.textContent = '';

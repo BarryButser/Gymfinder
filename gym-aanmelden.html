@@ -1,0 +1,268 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Gym aanmelden — Gymfinder</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --navy: #1B3A6B;
+      --accent: #2A5298;
+      --navy-soft: rgba(27, 58, 107, 0.08);
+      --text: #1a1a1a;
+      --muted: #6b7280;
+      --border: #e5e7eb;
+      --bg: #ffffff;
+      --bg-subtle: #f7f8fa;
+      --shadow: 0 8px 24px rgba(27, 58, 107, 0.08);
+      --radius: 16px;
+      --max: 640px;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    html { scroll-behavior: smooth; }
+    body { font-family: Inter, system-ui, sans-serif; background: var(--bg-subtle); color: var(--text); min-height: 100vh; }
+    .nav { background: rgba(255,255,255,0.92); backdrop-filter: blur(12px); border-bottom: 1px solid var(--border); position: sticky; top: 0; z-index: 100; }
+    .nav-inner { display: flex; align-items: center; justify-content: space-between; height: 68px; width: min(880px, calc(100% - 40px)); margin: 0 auto; }
+    .logo { font-weight: 800; font-size: 1.25rem; letter-spacing: -0.03em; color: var(--navy); text-decoration: none; }
+    .nav-back { font-size: 0.9rem; color: var(--navy); font-weight: 600; text-decoration: none; display: flex; align-items: center; gap: 6px; }
+    .nav-back::before { content: ""; width: 7px; height: 7px; border-left: 2px solid currentColor; border-bottom: 2px solid currentColor; transform: rotate(45deg); }
+    .nav-back:hover { color: var(--accent); }
+    .main { width: min(var(--max), calc(100% - 40px)); margin: 48px auto 80px; }
+    .hero { margin-bottom: 32px; }
+    .hero h1 { font-size: 2rem; font-weight: 800; letter-spacing: -0.04em; color: var(--navy); margin-bottom: 8px; }
+    .hero p { color: var(--muted); font-size: 1rem; line-height: 1.6; }
+    .benefits { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 12px; margin-bottom: 32px; }
+    .benefit { background: #fff; border: 1px solid var(--border); border-radius: 12px; padding: 14px 16px; }
+    .benefit-icon { font-size: 1.4rem; margin-bottom: 6px; }
+    .benefit-title { font-size: 0.85rem; font-weight: 600; color: var(--navy); margin-bottom: 2px; }
+    .benefit-desc { font-size: 0.78rem; color: var(--muted); }
+    .form-card { background: #fff; border: 1px solid var(--border); border-radius: var(--radius); padding: 32px; box-shadow: var(--shadow); }
+    .form-card h2 { font-size: 1.15rem; font-weight: 700; color: var(--navy); margin-bottom: 24px; }
+    .form-group { margin-bottom: 18px; }
+    .form-group label { display: block; font-size: 0.88rem; font-weight: 600; color: var(--text); margin-bottom: 6px; }
+    .form-group label span { color: #9ca3af; font-weight: 400; }
+    .form-group input, .form-group select, .form-group textarea {
+      width: 100%; border: 1px solid var(--border); border-radius: 10px; padding: 11px 14px;
+      font: inherit; font-size: 0.95rem; background: var(--bg-subtle); color: var(--text);
+      transition: border-color 0.15s, box-shadow 0.15s; outline: none;
+    }
+    .form-group input:focus, .form-group select:focus, .form-group textarea:focus {
+      border-color: var(--navy); box-shadow: 0 0 0 3px rgba(27,58,107,0.08);
+    }
+    .form-group textarea { resize: vertical; min-height: 100px; }
+    .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+    .checkbox-group { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 4px; }
+    .checkbox-item { display: flex; align-items: center; gap: 7px; font-size: 0.88rem; cursor: pointer; }
+    .checkbox-item input { width: auto; accent-color: var(--navy); }
+    .divider { border: none; border-top: 1px solid var(--border); margin: 24px 0; }
+    .submit-btn { width: 100%; background: var(--navy); color: #fff; border: none; border-radius: 12px; padding: 14px; font: inherit; font-size: 1rem; font-weight: 700; cursor: pointer; transition: background 0.15s; margin-top: 8px; }
+    .submit-btn:hover { background: var(--accent); }
+    .success { display: none; text-align: center; padding: 40px 20px; }
+    .success-icon { font-size: 3rem; margin-bottom: 12px; }
+    .success h3 { font-size: 1.3rem; font-weight: 700; color: var(--navy); margin-bottom: 8px; }
+    .success p { color: var(--muted); margin-bottom: 20px; }
+    .success a { color: var(--navy); font-weight: 600; text-decoration: none; }
+    .success a:hover { text-decoration: underline; }
+    .required-note { font-size: 0.82rem; color: var(--muted); margin-bottom: 20px; }
+    footer { padding: 24px 0 36px; text-align: center; color: var(--muted); font-size: 0.85rem; }
+    @media (max-width: 560px) {
+      .form-row { grid-template-columns: 1fr; }
+      .form-card { padding: 20px; }
+      .main { margin-top: 32px; }
+    }
+  </style>
+</head>
+<body>
+  <header class="nav">
+    <div class="nav-inner">
+      <a class="logo" href="/">gymfinder</a>
+      <a class="nav-back" href="/">Terug naar overzicht</a>
+    </div>
+  </header>
+
+  <main class="main">
+    <div class="hero">
+      <h1>Zet jouw gym op Gymfinder</h1>
+      <p>Bereik sporters die actief op zoek zijn naar een gym in jouw buurt — in België en Nederland. Vermelding is gratis om mee te starten.</p>
+    </div>
+
+    <div class="benefits">
+      <div class="benefit">
+        <div class="benefit-icon">🎯</div>
+        <div class="benefit-title">Gericht bereik</div>
+        <div class="benefit-desc">Sporters die actief zoeken</div>
+      </div>
+      <div class="benefit">
+        <div class="benefit-icon">🆓</div>
+        <div class="benefit-title">Gratis starten</div>
+        <div class="benefit-desc">Geen kosten om vermeld te staan</div>
+      </div>
+      <div class="benefit">
+        <div class="benefit-icon">🗺️</div>
+        <div class="benefit-title">Op de kaart</div>
+        <div class="benefit-desc">Zichtbaar in lijst én kaartweergave</div>
+      </div>
+      <div class="benefit">
+        <div class="benefit-icon">⭐</div>
+        <div class="benefit-title">Uitgelicht</div>
+        <div class="benefit-desc">Premium plek bovenaan de lijst</div>
+      </div>
+    </div>
+
+    <div class="form-card">
+      <div id="form-content">
+        <h2>Aanmeldformulier</h2>
+        <p class="required-note">Velden met * zijn verplicht</p>
+
+        <form id="gym-form" netlify name="gym-aanmelding" method="POST">
+          <input type="hidden" name="form-name" value="gym-aanmelding" />
+
+          <div class="form-group">
+            <label>Naam van de gym *</label>
+            <input type="text" name="naam" placeholder="bv. Iron Temple Antwerpen" required />
+          </div>
+
+          <div class="form-row">
+            <div class="form-group">
+              <label>Stad *</label>
+              <input type="text" name="stad" placeholder="bv. Antwerpen" required />
+            </div>
+            <div class="form-group">
+              <label>Land *</label>
+              <select name="land" required>
+                <option value="">Kies een land</option>
+                <option value="België">België</option>
+                <option value="Nederland">Nederland</option>
+                <option value="Duitsland">Duitsland</option>
+                <option value="Luxemburg">Luxemburg</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label>Volledig adres *</label>
+            <input type="text" name="adres" placeholder="bv. Vrijheid 94, 2320 Hoogstraten" required />
+          </div>
+
+          <div class="form-group">
+            <label>Type sportlocatie *</label>
+            <select name="type" required>
+              <option value="">Selecteer type</option>
+              <option value="Fitness">Fitness / Gym</option>
+              <option value="Yoga">Yoga / Pilates</option>
+              <option value="Outdoor">Outdoor sport</option>
+              <option value="Powerlifting">Powerlifting</option>
+              <option value="CrossFit">CrossFit</option>
+              <option value="Kinesist">Kinesist / Fysio</option>
+              <option value="Zwembad">Zwembad</option>
+              <option value="Padel">Padel / Tennis</option>
+              <option value="Andere">Andere</option>
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label>Website URL <span>(optioneel)</span></label>
+            <input type="url" name="website" placeholder="https://www.jouwgym.be" />
+          </div>
+
+          <div class="form-group">
+            <label>Korte beschrijving <span>(optioneel)</span></label>
+            <textarea name="beschrijving" placeholder="Beschrijf wat jouw gym uniek maakt, voor wie het geschikt is, welke apparatuur aanwezig is..."></textarea>
+          </div>
+
+          <hr class="divider" />
+
+          <div class="form-group">
+            <label>Prijzen <span>(optioneel)</span></label>
+            <div class="form-row">
+              <input type="number" name="prijs_dagpas" placeholder="Dagpas in €" min="0" step="0.5" />
+              <input type="number" name="prijs_weekpas" placeholder="Weekpas in €" min="0" step="0.5" />
+            </div>
+            <div style="margin-top:10px">
+              <input type="number" name="prijs_jaar" placeholder="Jaarabonnement in €" min="0" style="width:100%;border:1px solid var(--border);border-radius:10px;padding:11px 14px;font:inherit;font-size:0.95rem;background:var(--bg-subtle);color:var(--text);outline:none;" />
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label>Faciliteiten <span>(selecteer wat van toepassing is)</span></label>
+            <div class="checkbox-group">
+              <label class="checkbox-item"><input type="checkbox" name="faciliteiten" value="Dagpas beschikbaar" /> Dagpas beschikbaar</label>
+              <label class="checkbox-item"><input type="checkbox" name="faciliteiten" value="24/7 toegang" /> 24/7 toegang</label>
+              <label class="checkbox-item"><input type="checkbox" name="faciliteiten" value="Douches" /> Douches</label>
+              <label class="checkbox-item"><input type="checkbox" name="faciliteiten" value="Parking" /> Parking</label>
+              <label class="checkbox-item"><input type="checkbox" name="faciliteiten" value="Kleedkamers" /> Kleedkamers</label>
+              <label class="checkbox-item"><input type="checkbox" name="faciliteiten" value="Sauna" /> Sauna</label>
+              <label class="checkbox-item"><input type="checkbox" name="faciliteiten" value="Personal training" /> Personal training</label>
+              <label class="checkbox-item"><input type="checkbox" name="faciliteiten" value="Groepslessen" /> Groepslessen</label>
+              <label class="checkbox-item"><input type="checkbox" name="faciliteiten" value="Beginnersvriendelijk" /> Beginnersvriendelijk</label>
+            </div>
+          </div>
+
+          <hr class="divider" />
+
+          <div class="form-group">
+            <label>Contactpersoon *</label>
+            <input type="text" name="contactpersoon" placeholder="Voor- en achternaam" required />
+          </div>
+
+          <div class="form-row">
+            <div class="form-group">
+              <label>E-mailadres *</label>
+              <input type="email" name="email" placeholder="naam@jouwgym.be" required />
+            </div>
+            <div class="form-group">
+              <label>Telefoonnummer <span>(optioneel)</span></label>
+              <input type="tel" name="telefoon" placeholder="+32 ..." />
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label>Interesse in uitgelichte vermelding? <span>(optioneel)</span></label>
+            <select name="uitgelicht_interesse">
+              <option value="Nee">Nee, gratis vermelding volstaat</option>
+              <option value="Ja, meer info">Ja, stuur me meer info</option>
+              <option value="Ja, direct">Ja, ik wil direct uitgelicht staan</option>
+            </select>
+          </div>
+
+          <button type="submit" class="submit-btn">Gym aanmelden →</button>
+        </form>
+      </div>
+
+      <div class="success" id="success-msg">
+        <div class="success-icon">✅</div>
+        <h3>Aanmelding ontvangen!</h3>
+        <p>Bedankt voor je aanmelding. We verwerken je gym zo snel mogelijk en nemen contact op via je e-mailadres.</p>
+        <a href="/">← Terug naar Gymfinder</a>
+      </div>
+    </div>
+  </main>
+
+  <footer>
+    <div>© 2026 Gymfinder · België &amp; Nederland</div>
+  </footer>
+
+  <script>
+    document.getElementById('gym-form').addEventListener('submit', async function(e) {
+      e.preventDefault();
+      const form = e.target;
+      const data = new FormData(form);
+
+      try {
+        await fetch('/', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+          body: new URLSearchParams(data).toString()
+        });
+        document.getElementById('form-content').style.display = 'none';
+        document.getElementById('success-msg').style.display = 'block';
+      } catch(err) {
+        alert('Er ging iets mis. Probeer het opnieuw of stuur een e-mail naar hallo@gymfinder.be');
+      }
+    });
+  </script>
+</body>
+</html>
