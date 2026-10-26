@@ -95,6 +95,8 @@
     .pin-regular .map-pin-body { background: #2A5298; }
     .pin-regular::after { background: #2A5298; }
 
+    .load-more-btn { background: #fff; border: 1.5px solid var(--navy); color: var(--navy); border-radius: 999px; padding: 12px 28px; font: inherit; font-weight: 600; font-size: 0.95rem; cursor: pointer; transition: background 0.15s, color 0.15s; }
+    .load-more-btn:hover { background: var(--navy); color: #fff; }
     .partner { background: var(--bg-subtle); border-top: 1px solid var(--border); padding: 56px 0; text-align: center; }
     .partner h2 { color: var(--navy); margin-bottom: 8px; }
     .partner p { color: var(--muted); margin-bottom: 18px; }
@@ -327,7 +329,7 @@
       const hasMore = shown < n;
       const remaining = n - shown;
       const loadMoreBtn = hasMore
-        ? '<div style="text-align:center;margin-top:24px"><button onclick="loadMore()" style="background:#fff;border:1.5px solid #1B3A6B;color:#1B3A6B;border-radius:999px;padding:12px 28px;font:inherit;font-weight:600;font-size:0.95rem;cursor:pointer;transition:background 0.15s,color 0.15s" onmouseover="this.style.background='#1B3A6B';this.style.color='#fff'" onmouseout="this.style.background='#fff';this.style.color='#1B3A6B'">Meer gyms laden ('+remaining+' resterend)</button></div>'
+        ? '<div style="text-align:center;margin-top:24px"><button onclick="loadMore()" class="load-more-btn">Meer gyms laden (' + remaining + ' resterend)</button></div>'
         : '';
       els.list.innerHTML = cards + loadMoreBtn;
     }
